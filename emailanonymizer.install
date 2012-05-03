@@ -22,7 +22,7 @@ function emailanonymizer_uninstall() {
 function emailanonymizer_schema() {
   $items = array();
 
-  $schema['emailanonymizer_email_mapping'] = emailanonymizer_table_email_mapping();
+  $items['emailanonymizer_email_mapping'] = emailanonymizer_table_email_mapping();
 
   return $items;
 }

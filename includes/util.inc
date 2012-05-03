@@ -18,7 +18,7 @@ function emailanonymizer_generate_address() {
  * Returns the domain to be used for anonymous emails
  */
 function emailanonymizer_get_domain() {
-  return variable_get('', $_SERVER['HTTP_HOST']);
+  return variable_get('emailanonymizer_email_domain', $_SERVER['HTTP_HOST']);
 }
 
 /**
