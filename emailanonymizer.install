@@ -1,0 +1,5 @@
+<?php
+
+function emailanonymizer_schema() {
+
+}
