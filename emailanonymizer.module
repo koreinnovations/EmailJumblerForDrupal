@@ -1,6 +1,7 @@
 <?php
 
 module_load_include('inc', 'emailanonymizer', 'includes/util');
+module_load_include('inc', 'emailanonymizer', 'includes/hooks');
 
 /**
  * Implements hook_perm(). 
