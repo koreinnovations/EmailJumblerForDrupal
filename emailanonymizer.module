@@ -1,7 +1,7 @@
 <?php
 
 module_load_include('inc', 'emailanonymizer', 'includes/util');
-module_load_include('inc', 'emailanonymizer', 'includes/hooks');
+module_load_include('inc', 'emailanonymizer', 'includes/forms');
 
 /**
  * Implements hook_perm(). 
@@ -29,4 +29,15 @@ function emailanonymizer_menu() {
   );
 
   return $items;
+}
+
+function emailanonymizer_form_alter(&$form, &$form_state, $form_id) {
+  if ($form_id == 'comment_form') {
+    $form['expose_fake_email'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Generate a fake email address and allow people to contact me that way'),
+        '#description' => t('Your "fake" email is a safe, secure way for people to contact you.  You will receive emails at your normal email address, but nobody will see your real email address.'),
+    );
+    $form['#submit'][] = 'emailanonymizer_custom_comment_submit';
+  }
 }
