@@ -1,0 +1,4 @@
+emailanonymizer
+===============
+
+Drupal Email Anonymizer
