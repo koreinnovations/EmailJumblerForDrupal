@@ -1,2 +1,29 @@
 <?php
 
+/**
+ * Implements hook_perm(). 
+ */
+function emailanonymizer_perm() {
+  $items = array();
+
+  $items[] = 'administer email anonymizer';
+
+  return $items;
+}
+
+/**
+ * Implements hook_menu(). 
+ */
+function emailanonymizer_menu() {
+  $items = array();
+
+  $items['admin/settings/emailanonymizer'] = array(
+      'title' => 'Email Anonymizer',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('emailanonymizer_admin_settings_form'),
+      'access arguments' => array('administer email anonymizer'),
+      'file' => 'includes/admin.inc',
+  );
+
+  return $items;
+}
