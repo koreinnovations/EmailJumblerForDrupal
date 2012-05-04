@@ -31,6 +31,17 @@ function emailanonymizer_menu() {
   return $items;
 }
 
+function emailanonymizer_theme() {
+  $items = array();
+
+  $items['emailanonymizer_contact_link'] = array(
+      'arguments' => array('record' => NULL),
+      'file' => 'includes/theme.inc',
+  );
+
+  return $items;
+}
+
 function emailanonymizer_form_alter(&$form, &$form_state, $form_id) {
   if ($form_id == 'comment_form') {
      $form['#submit'][] = 'custom_comment_email_anonymization';
@@ -49,6 +60,29 @@ db_query('INSERT INTO {emailanonymizer_email_mapping} (created, sender_name, ori
         '#title' => t('Generate a fake email address and allow people to contact me that way'),
         '#description' => t('Your "fake" email is a safe, secure way for people to contact you.  You will receive emails at your normal email address, but nobody will see your real email address.'),
     );
-    $form['#submit'][] = 'emailanonymizer_custom_comment_submit';
+  }
+}
+
+function emailanonymizer_comment(&$a1, $op) {
+  switch ($op) {
+    case 'insert':
+      if ($a1['expose_fake_email']) {
+        $name = $a1['name'];
+        $original_email = $a1['mail'];
+        $encoded_email = emailanonymizer_generate_address();
+        $cid = $a1['cid'];
+        $created = date("F j, Y, g:i a");
+        $sql = 'INSERT INTO {emailanonymizer_email_mapping} (created, sender_name, original_email, encoded_email, ref_id, ref_type) VALUES ("%d", "%s", "%s","%s", %d, "%s")';
+        db_query($sql, $created, $name, $original_email, $encoded_email, $cid, 'comment');
+      }
+      break;
+    case 'view':
+      $anonymized = emailanonymizer_get_anonymized_email($a1->cid, 'comment');
+
+      if ($anonymized) {
+        $a1->comment .= theme('emailanonymizer_contact_link', $anonymized);
+      }
+
+      break;
   }
 }
