@@ -27,6 +27,12 @@ function emailanonymizer_menu() {
       'access arguments' => array('administer email anonymizer'),
       'file' => 'includes/admin.inc',
   );
+  
+  $items['test_email'] = array(
+      'title' => 'Email Interceptions From Gmail',
+      'page callback' => 'gmail_email_interception',
+      'access callback' => TRUE,
+  );
 
   return $items;
 }
@@ -63,6 +69,12 @@ db_query('INSERT INTO {emailanonymizer_email_mapping} (created, sender_name, ori
   }
 }
 
+function generate_original_from_encoded_email($encoded_email) {
+  $sql = "SELECT * FROM {emailanonymizer_email_mapping} WHERE encoded_email = %s";
+  $result = db_query($sql, $encoded_email);
+  return db_fetch_object($result);
+}
+
 function emailanonymizer_comment(&$a1, $op) {
   switch ($op) {
     case 'insert':
@@ -85,4 +97,33 @@ function emailanonymizer_comment(&$a1, $op) {
 
       break;
   }
+}
+
+function gmail_email_interception() {
+/* credentials for catch-all account to gmail */
+$hostname = '{imap.gmail.com:993/ssl/novalidate-cert}INBOX';
+$username = 'superadmin@mentornet.org';
+$password = 'tsarberryruin';
+
+/* try to connect */
+$inbox = imap_open($hostname,$username,$password) or die('Cannot connect to Gmail: ' . imap_last_error());
+$msgnos = imap_search($inbox, 'UNSEEN');
+foreach($msgnos as $msg){
+$header = imap_headerinfo($inbox, $msg);
+$sender = $header->sender[0]->personal;
+$receiver = $header->to[0]->mailbox.'@'.$header->to[0]->host;
+$subject = $header->subject;
+//$body = imap_body($inbox, $msg);
+$original_email = generate_original_from_encoded_email($receiver);
+//dpm('Body:'.$body);
+dpm($header);
+$final .= 'Sender:'.$sender.'</br>Receiver:'.$receiver.'</br>Subject:'.$subject.'</br>Original Email:'.$original_email->original_email.'</br></br>';
+}
+return $final;
+}
+
+function generate_original_from_encoded_email($encoded_email) {
+  $sql = "SELECT * FROM {emailanonymizer_email_mapping} WHERE encoded_email = '%s'";
+  $result = db_query($sql, $encoded_email);
+  return db_fetch_object($result);
 }
