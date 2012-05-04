@@ -108,16 +108,22 @@ $password = 'tsarberryruin';
 /* try to connect */
 $inbox = imap_open($hostname,$username,$password) or die('Cannot connect to Gmail: ' . imap_last_error());
 $msgnos = imap_search($inbox, 'UNSEEN');
+if(!empty($msgnos)){
 foreach($msgnos as $msg){
 $header = imap_headerinfo($inbox, $msg);
-$sender = $header->sender[0]->personal;
+$sender_name = $header->sender[0]->personal;
 $receiver = $header->to[0]->mailbox.'@'.$header->to[0]->host;
+$sender_email = $header->from[0]->mailbox.'@'.$header->from[0]->host;
 $subject = $header->subject;
-//$body = imap_body($inbox, $msg);
+$body = imap_body($inbox, $msg);
 $original_email = generate_original_from_encoded_email($receiver);
-//dpm('Body:'.$body);
 dpm($header);
+$send = mail($original_email->original_email, $subject, '', 'From: '.$sender_email,'-f '.$sender_email);
 $final .= 'Sender:'.$sender.'</br>Receiver:'.$receiver.'</br>Subject:'.$subject.'</br>Original Email:'.$original_email->original_email.'</br></br>';
+}
+}
+else {
+$final = "no new messages.Try sending one and then revisit..";
 }
 return $final;
 }
