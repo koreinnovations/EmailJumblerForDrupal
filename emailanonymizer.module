@@ -15,6 +15,13 @@ function emailanonymizer_perm() {
 }
 
 /**
+ * Implements hook_cron(). 
+ */
+function emailanonymizer_cron() {
+//maybe we can put our email processing function here sometimes in future
+}
+
+/**
  * Implements hook_menu(). 
  */
 function emailanonymizer_menu() {
@@ -115,11 +122,11 @@ $sender_name = $header->sender[0]->personal;
 $receiver = $header->to[0]->mailbox.'@'.$header->to[0]->host;
 $sender_email = $header->from[0]->mailbox.'@'.$header->from[0]->host;
 $subject = $header->subject;
-$body = imap_body($inbox, $msg);
+$body = imap_qprint(imap_fetchbody($inbox, $msg, 1));
 $original_email = generate_original_from_encoded_email($receiver);
 dpm($header);
-$send = mail($original_email->original_email, $subject, '', 'From: '.$sender_email,'-f '.$sender_email);
-$final .= 'Sender:'.$sender.'</br>Receiver:'.$receiver.'</br>Subject:'.$subject.'</br>Original Email:'.$original_email->original_email.'</br></br>';
+$send = mail($original_email->original_email, $subject, $body, 'From: '.$sender_email,'-f '.$sender_email);
+$final .= 'Sender Name:'.$sender_name.'</br>Sender Email:'.$sender_email.'</br>Receiver:'.$receiver.'</br>Subject:'.$subject.'</br>Original Email:'.$original_email->original_email.'</br></br>';
 }
 }
 else {
