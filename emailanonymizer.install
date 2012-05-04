@@ -59,7 +59,35 @@ function emailanonymizer_table_email_mapping() {
               'length' => '255',
               'not null' => TRUE,
           ),
+          'ref_id' => array(
+              'description' => t('Referenced entity id'),
+              'type' => 'int',
+              'not null' => TRUE,
+          ),
+          'ref_type' => array(
+              'description' => t('Referenced entity type'),
+              'type' => 'varchar',
+              'length' => '60',
+              'not null' => TRUE,
+          ),
       ),
       'primary key' => array('id'),
+      'unique keys' => array(
+          'uq_email_mapping_encoded' => array('encoded_email'),
+      ),
   );
+}
+
+/**
+ * Add "ref_id" and "ref_type" fields to email mapping table.
+ * Add unique index on encoded_email field of email mapping table.
+ */
+function emailanonymizer_update_6000() {
+  $items = array();
+
+  $items[] = update_sql("ALTER TABLE {emailanonymizer_email_mapping} ADD COLUMN ref_id INT NOT NULL DEFAULT 0");
+  $items[] = update_sql("ALTER TABLE {emailanonymizer_email_mapping} ADD COLUMN ref_type VARCHAR(60) NOT NULL");
+  $items[] = update_sql("CREATE UNIQUE INDEX uq_email_mapping_encoded ON {emailanonymizer_email_mapping} (encoded_email)");
+
+  return $items;
 }
