@@ -10,6 +10,7 @@ function emailanonymizer_perm() {
   $items = array();
 
   $items[] = 'administer email anonymizer';
+  $items[] = 'use email anonymizer routing page';
 
   return $items;
 }
@@ -18,7 +19,7 @@ function emailanonymizer_perm() {
  * Implements hook_cron(). 
  */
 function emailanonymizer_cron() {
-//maybe we can put our email processing function here sometimes in future
+  // we can invoke our email routing code here in the future
 }
 
 /**
@@ -34,11 +35,12 @@ function emailanonymizer_menu() {
       'access arguments' => array('administer email anonymizer'),
       'file' => 'includes/admin.inc',
   );
-  
-  $items['test_email'] = array(
-      'title' => 'Email Interceptions From Gmail',
-      'page callback' => 'gmail_email_interception',
-      'access callback' => TRUE,
+
+  $items['admin/build/emailanonymizer/routing'] = array(
+      'title' => 'Email Anonymizer Routing',
+      'page callback' => 'emailanonymizer_page_email_routing',
+      'access arguments' => array('use email anonymizer routing page'),
+      'file' => 'includes/pages.inc',
   );
 
   return $items;
@@ -57,29 +59,22 @@ function emailanonymizer_theme() {
 
 function emailanonymizer_form_alter(&$form, &$form_state, $form_id) {
   if ($form_id == 'comment_form') {
-     $form['#submit'][] = 'custom_comment_email_anonymization';
+    $form['#submit'][] = 'emailanonymizer_custom_comment_email_anonymization';
   }
 }
 
-function custom_comment_email_anonymization($form, &$form_state) {
-$name = $form_state['values']['name'];
-$original_email = $form_state['values']['mail'];
-$encoded_email = emailanonymizer_generate_address();
-$created = date("F j, Y, g:i a");
-db_query('INSERT INTO {emailanonymizer_email_mapping} (created, sender_name, original_email, encoded_email) VALUES ("%d", "%s", "%s","%s")', $created, $name, $original_email, $encoded_email);
+function emailanonymizer_custom_comment_email_anonymization($form, &$form_state) {
+  $name = $form_state['values']['name'];
+  $original_email = $form_state['values']['mail'];
+  $encoded_email = emailanonymizer_generate_address();
+  $created = date("F j, Y, g:i a");
+  db_query('INSERT INTO {emailanonymizer_email_mapping} (created, sender_name, original_email, encoded_email) VALUES ("%d", "%s", "%s","%s")', $created, $name, $original_email, $encoded_email);
 
-    $form['expose_fake_email'] = array(
-        '#type' => 'checkbox',
-        '#title' => t('Generate a fake email address and allow people to contact me that way'),
-        '#description' => t('Your "fake" email is a safe, secure way for people to contact you.  You will receive emails at your normal email address, but nobody will see your real email address.'),
-    );
-  }
-}
-
-function generate_original_from_encoded_email($encoded_email) {
-  $sql = "SELECT * FROM {emailanonymizer_email_mapping} WHERE encoded_email = %s";
-  $result = db_query($sql, $encoded_email);
-  return db_fetch_object($result);
+  $form['expose_fake_email'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Generate a fake email address and allow people to contact me that way'),
+      '#description' => t('Your "fake" email is a safe, secure way for people to contact you.  You will receive emails at your normal email address, but nobody will see your real email address.'),
+  );
 }
 
 function emailanonymizer_comment(&$a1, $op) {
@@ -104,39 +99,4 @@ function emailanonymizer_comment(&$a1, $op) {
 
       break;
   }
-}
-
-function gmail_email_interception() {
-/* credentials for catch-all account to gmail */
-$hostname = '{imap.gmail.com:993/ssl/novalidate-cert}INBOX';
-$username = 'superadmin@mentornet.org';
-$password = 'tsarberryruin';
-
-/* try to connect */
-$inbox = imap_open($hostname,$username,$password) or die('Cannot connect to Gmail: ' . imap_last_error());
-$msgnos = imap_search($inbox, 'UNSEEN');
-if(!empty($msgnos)){
-foreach($msgnos as $msg){
-$header = imap_headerinfo($inbox, $msg);
-$sender_name = $header->sender[0]->personal;
-$receiver = $header->to[0]->mailbox.'@'.$header->to[0]->host;
-$sender_email = $header->from[0]->mailbox.'@'.$header->from[0]->host;
-$subject = $header->subject;
-$body = imap_qprint(imap_fetchbody($inbox, $msg, 1));
-$original_email = generate_original_from_encoded_email($receiver);
-dpm($header);
-$send = mail($original_email->original_email, $subject, $body, 'From: '.$sender_email,'-f '.$sender_email);
-$final .= 'Sender Name:'.$sender_name.'</br>Sender Email:'.$sender_email.'</br>Receiver:'.$receiver.'</br>Subject:'.$subject.'</br>Original Email:'.$original_email->original_email.'</br></br>';
-}
-}
-else {
-$final = "no new messages.Try sending one and then revisit..";
-}
-return $final;
-}
-
-function generate_original_from_encoded_email($encoded_email) {
-  $sql = "SELECT * FROM {emailanonymizer_email_mapping} WHERE encoded_email = '%s'";
-  $result = db_query($sql, $encoded_email);
-  return db_fetch_object($result);
 }
