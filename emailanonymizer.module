@@ -19,7 +19,7 @@ function emailanonymizer_perm() {
  * Implements hook_cron(). 
  */
 function emailanonymizer_cron() {
-  // we can invoke our email routing code here in the future
+  emailanonymizer_do_email_routing();
 }
 
 /**
