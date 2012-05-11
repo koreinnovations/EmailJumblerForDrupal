@@ -59,40 +59,44 @@ function emailanonymizer_theme() {
 
 function emailanonymizer_form_alter(&$form, &$form_state, $form_id) {
   if ($form_id == 'comment_form') {
+    $form['expose_fake_email'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Generate a fake email address and allow people to contact me that way'),
+        '#description' => t('Your "fake" email is a safe, secure way for people to contact you.  You will receive emails at your normal email address, but nobody will see your real email address.'),
+    );
     $form['#submit'][] = 'emailanonymizer_custom_comment_email_anonymization';
   }
-  
-  if ($form_id == $form['type']['#value'].'_node_form') {
-    $node_options = variable_get('node_options_'. $form['type']['#value'], array('status', 'promote'));
+
+  if ($form_id == $form['type']['#value'] . '_node_form') {
+    $node_options = variable_get('node_options_' . $form['type']['#value'], array('status', 'promote'));
     $allow_anonymization = in_array('allow_anonymization', $node_options) && user_is_anonymous();
-    if($allow_anonymization) { 
-      
-     $path = drupal_get_path("module", "emailanonymizer");
-     drupal_add_js($path.'/js/emailanonymizer.js');
-       $form['anonymize'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Email Anonymization'),
-  );
-  
+    if ($allow_anonymization) {
+
+      $path = drupal_get_path("module", "emailanonymizer");
+      drupal_add_js($path . '/js/emailanonymizer.js');
+      $form['anonymize'] = array(
+          '#type' => 'fieldset',
+          '#title' => t('Email Anonymization'),
+      );
+
       $form['anonymize']['expose_fake_email'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Generate a fake email address and allow people to contact me that way'),
-      '#description' => t('Your "fake" email is a safe, secure way for people to contact you.  You will receive emails at your normal email address, but nobody will see your real email address.'));
-    
-       $form['anonymize']['name'] = array(
-      '#type' => 'textfield',
-      '#size' => 60,
-      '#title' => t('Name')
+          '#type' => 'checkbox',
+          '#title' => t('Generate a fake email address and allow people to contact me that way'),
+          '#description' => t('Your "fake" email is a safe, secure way for people to contact you.  You will receive emails at your normal email address, but nobody will see your real email address.'));
+
+      $form['anonymize']['name'] = array(
+          '#type' => 'textfield',
+          '#size' => 60,
+          '#title' => t('Name')
       );
 
       $form['anonymize']['email_to_anonymize'] = array(
-      '#type' => 'textfield',
-      '#size' => 60,
-      '#title' => t('Email'),
-      '#description' => t('Your email address will be disguised with a randomly-generated email address.  People will be able to contact you without your emial address being exposed.'));
+          '#type' => 'textfield',
+          '#size' => 60,
+          '#title' => t('Email'),
+          '#description' => t('Your email address will be disguised with a randomly-generated email address.  People will be able to contact you without your emial address being exposed.'));
     }
-  }  
-  
+  }
 }
 
 function emailanonymizer_custom_comment_email_anonymization($form, &$form_state) {
@@ -101,12 +105,6 @@ function emailanonymizer_custom_comment_email_anonymization($form, &$form_state)
   $encoded_email = emailanonymizer_generate_address();
   $created = date("F j, Y, g:i a");
   db_query('INSERT INTO {emailanonymizer_email_mapping} (created, sender_name, original_email, encoded_email) VALUES ("%d", "%s", "%s","%s")', $created, $name, $original_email, $encoded_email);
-
-  $form['expose_fake_email'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Generate a fake email address and allow people to contact me that way'),
-      '#description' => t('Your "fake" email is a safe, secure way for people to contact you.  You will receive emails at your normal email address, but nobody will see your real email address.'),
-  );
 }
 
 function emailanonymizer_comment(&$a1, $op) {
@@ -132,7 +130,6 @@ function emailanonymizer_comment(&$a1, $op) {
       break;
   }
 }
-
 
 function emailanonymizer_nodeapi(&$node, $op) {
   switch ($op) {
