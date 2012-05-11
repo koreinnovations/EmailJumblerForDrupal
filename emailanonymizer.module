@@ -64,7 +64,6 @@ function emailanonymizer_form_alter(&$form, &$form_state, $form_id) {
         '#title' => t('Generate a fake email address and allow people to contact me that way'),
         '#description' => t('Your "fake" email is a safe, secure way for people to contact you.  You will receive emails at your normal email address, but nobody will see your real email address.'),
     );
-    $form['#submit'][] = 'emailanonymizer_custom_comment_email_anonymization';
   }
 
   if ($form_id == $form['type']['#value'] . '_node_form') {
@@ -97,14 +96,6 @@ function emailanonymizer_form_alter(&$form, &$form_state, $form_id) {
           '#description' => t('Your email address will be disguised with a randomly-generated email address.  People will be able to contact you without your emial address being exposed.'));
     }
   }
-}
-
-function emailanonymizer_custom_comment_email_anonymization($form, &$form_state) {
-  $name = $form_state['values']['name'];
-  $original_email = $form_state['values']['mail'];
-  $encoded_email = emailanonymizer_generate_address();
-  $created = date("F j, Y, g:i a");
-  db_query('INSERT INTO {emailanonymizer_email_mapping} (created, sender_name, original_email, encoded_email) VALUES ("%d", "%s", "%s","%s")', $created, $name, $original_email, $encoded_email);
 }
 
 function emailanonymizer_comment(&$a1, $op) {
