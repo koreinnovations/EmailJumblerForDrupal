@@ -57,7 +57,7 @@ function emailanonymizer_get_anonymized_email($ref_id, $ref_type = 'comment') {
 }
 
 function emailanonymizer_generate_original_from_encoded_email($encoded_email) {
-  $sql = "SELECT * FROM {emailanonymizer_email_mapping} WHERE encoded_email = %s";
+  $sql = "SELECT * FROM {emailanonymizer_email_mapping} WHERE encoded_email = '%s'";
   $result = db_query($sql, $encoded_email);
   return db_fetch_object($result);
 }
