@@ -100,3 +100,7 @@ function emailanonymizer_comment(&$a1, $op) {
       break;
   }
 }
+
+function emailanonymizer_form_node_type_form_alter(&$form, &$form_state) {
+  $form['workflow']['node_options']['#options']['allow_anonymization'] = t('Allow anonymization');
+}
