@@ -70,6 +70,12 @@ function emailanonymizer_table_email_mapping() {
               'length' => '60',
               'not null' => TRUE,
           ),
+          'show_anonymized' => array(
+              'description' => t('Show contact info anonymized'),
+              'type' => 'int',
+              'not null' => TRUE,
+              'default' => 1,
+          ),
       ),
       'primary key' => array('id'),
       'unique keys' => array(
@@ -88,6 +94,14 @@ function emailanonymizer_update_6000() {
   $items[] = update_sql("ALTER TABLE {emailanonymizer_email_mapping} ADD COLUMN ref_id INT NOT NULL DEFAULT 0");
   $items[] = update_sql("ALTER TABLE {emailanonymizer_email_mapping} ADD COLUMN ref_type VARCHAR(60) NOT NULL");
   $items[] = update_sql("CREATE UNIQUE INDEX uq_email_mapping_encoded ON {emailanonymizer_email_mapping} (encoded_email)");
+
+  return $items;
+}
+
+function emailanonymizer_update_6001() {
+  $items = array();
+
+  $items[] = update_sql("ALTER TABLE {emailanonymizer_email_mapping} ADD COLUMN show_anonymized TINYINT NOT NULL DEFAULT 1");
 
   return $items;
 }

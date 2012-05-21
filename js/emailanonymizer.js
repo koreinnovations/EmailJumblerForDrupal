@@ -1,15 +1,21 @@
 Drupal.behaviors.emailanonymizer = function(context) {
+  
+  var emailField = $('#edit-email-to-anonymize-wrapper');
+  var nameField = $('#edit-name-1-wrapper');
 
-   $('#edit-email-to-anonymize-wrapper').hide();
-   $('#edit-name-1-wrapper').hide();
-   $('#edit-expose-fake-email').change(function(){
-   if($(this).attr('checked') == true){
-     $('#edit-email-to-anonymize-wrapper').slideDown();
-     $('#edit-name-1-wrapper').slideDown();
-   }
-   else {
-     $('#edit-email-to-anonymize-wrapper').slideUp();
-     $('#edit-name-1-wrapper').slideUp();
-   }
-   });
+  var updateContactFieldsVisibility = function() {
+    var radio = $('input:radio[name="contact_pref"]:checked').val();
+    if (radio == "no_anonymize" || radio == "anonymize") {
+      emailField.slideDown();
+      nameField.slideDown();
+    }
+    else {
+      emailField.slideUp();
+      nameField.slideUp();
+    }
+  };
+
+  updateContactFieldsVisibility();
+  $('input:radio[name="contact_pref"]').click(updateContactFieldsVisibility);
+
 }

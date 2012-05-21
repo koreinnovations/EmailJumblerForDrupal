@@ -74,15 +74,23 @@ function emailanonymizer_form_alter(&$form, &$form_state, $form_id) {
 
       $path = drupal_get_path("module", "emailanonymizer");
       drupal_add_js($path . '/js/emailanonymizer.js');
+      drupal_add_css($path . '/css/emailanonymizer.css');
+
       $form['anonymize'] = array(
           '#type' => 'fieldset',
-          '#title' => t('Email Anonymization'),
+          '#title' => t('Contact Preferences'),
       );
 
-      $form['anonymize']['expose_fake_email'] = array(
-          '#type' => 'checkbox',
-          '#title' => t('Generate an anonymized email address and allow people to contact me that way'),
-          '#description' => t('Your anonymized email is a safe, secure way for people to contact you.  You will receive emails at your normal email address, but nobody will see your real email address.'));
+      $form['anonymize']['contact_pref'] = array(
+          '#type' => 'radios',
+          '#title' => t('Would you like to allow people to contact you?'),
+          '#options' => array(
+              'no_contact' => t('Do not allow people to contact me'),
+              'no_anonymize' => t('Show my name and email address'),
+              'anonymize' => t('Hide my contact info, but show an anonymized email address that people can use to contact me'),
+          ),
+          '#default_value' => 'no_contact',
+          '#description' => t('An anonymized email address is a safe, secure way for people to contact you.  You will receive emails at your normal email address, but nobody will see your real email address.'));
 
       $form['anonymize']['name'] = array(
           '#type' => 'textfield',
@@ -129,14 +137,15 @@ function emailanonymizer_comment(&$a1, $op) {
 function emailanonymizer_nodeapi(&$node, $op) {
   switch ($op) {
     case 'insert':
-      if ($node->expose_fake_email) {
+      if ($node->contact_pref != 'no_contact') {
         $name = $node->name;
         $original_email = $node->email_to_anonymize;
         $encoded_email = emailanonymizer_generate_address();
+        $show_anonymized = ($node->contact_pref == 'anonymize');
         $nid = $node->nid;
         $created = date("F j, Y, g:i a");
-        $sql = 'INSERT INTO {emailanonymizer_email_mapping} (created, sender_name, original_email, encoded_email, ref_id, ref_type) VALUES ("%d", "%s", "%s","%s", %d, "%s")';
-        db_query($sql, $created, $name, $original_email, $encoded_email, $nid, 'node');
+        $sql = 'INSERT INTO {emailanonymizer_email_mapping} (created, sender_name, original_email, encoded_email, ref_id, ref_type, show_anonymized) VALUES ("%d", "%s", "%s","%s", %d, "%s", %d)';
+        db_query($sql, $created, $name, $original_email, $encoded_email, $nid, 'node', $show_anonymized);
       }
       break;
     case 'view':
