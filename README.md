@@ -1,9 +1,6 @@
-emailanonymizer
-===============
+**Email Jumbler for Drupal**
 
-**Drupal Email Anonymizer**
-
-Enables Craigslist-style anonymization of email addresses on node comments. An 
+Enables Craigslist-style "anonymization" of email addresses on node comments. An 
 anonymous user can post their comment, enter their name and email, and choose 
 to expose a "fake" email address that will route to their real email address.
 
