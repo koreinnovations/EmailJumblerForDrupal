@@ -60,22 +60,22 @@ function emailanonymizer_theme() {
 function emailanonymizer_form_alter(&$form, &$form_state, $form_id) {
   if ($form_id == 'comment_form') {
 
-    if (user_is_anonymous()) {
-      $path = drupal_get_path("module", "emailanonymizer");
-      drupal_add_js($path . '/js/emailanonymizer_comment.js');
+    //if (user_is_anonymous()) {
+    $path = drupal_get_path("module", "emailanonymizer");
+    drupal_add_js($path . '/js/emailanonymizer_comment.js');
 
-      $form['contact_pref'] = array(
-          '#type' => 'radios',
-          '#title' => t('Would you like to allow people to contact you?'),
-          '#options' => array(
-              'no_contact' => t('Do not allow people to contact me'),
-              'no_anonymize' => t('Show my name and email address'),
-              'anonymize' => t('Hide my contact info, but show an anonymized email address that people can use to contact me'),
-          ),
-          '#weight' => -1000,
-          '#default_value' => 'no_contact',
-          '#description' => t('An anonymized email address is a safe, secure way for people to contact you.  You will receive emails at your normal email address, but nobody will see your real email address.'),
-      );
+    $form['contact_pref'] = array(
+        '#type' => 'radios',
+        '#title' => t('Would you like to allow people to contact you?'),
+        '#options' => array(
+            'no_contact' => t('Do not allow people to contact me'),
+            'no_anonymize' => t('Show my name and email address'),
+            'anonymize' => t('Hide my contact info, but show an anonymized email address that people can use to contact me'),
+        ),
+        '#weight' => -1000,
+        '#default_value' => 'no_contact',
+        '#description' => t('An anonymized email address is a safe, secure way for people to contact you.  You will receive emails at your normal email address, but nobody will see your real email address.'),
+    );
 
 
 //      $form['expose_fake_email'] = array(
@@ -84,13 +84,13 @@ function emailanonymizer_form_alter(&$form, &$form_state, $form_id) {
 //          '#description' => t('Your anonymized email is a safe, secure way for people to contact you.  You will receive emails at your normal email address, but nobody will see your real email address.'),
 //      );
 
-      unset($form['mail']['#description']);
-      unset($form['homepage']);
-    }
+    unset($form['mail']['#description']);
+    unset($form['homepage']);
+    //}
   }
   elseif ($form_id == $form['type']['#value'] . '_node_form') {
     $node_options = variable_get('node_options_' . $form['type']['#value'], array('status', 'promote'));
-    $allow_anonymization = in_array('allow_anonymization', $node_options) && user_is_anonymous();
+    $allow_anonymization = in_array('allow_anonymization', $node_options); // && user_is_anonymous();
     if ($allow_anonymization) {
 
       $path = drupal_get_path("module", "emailanonymizer");
@@ -134,12 +134,13 @@ function emailanonymizer_form_alter(&$form, &$form_state, $form_id) {
 function emailanonymizer_comment(&$a1, $op) {
   switch ($op) {
     case 'insert':
+      $show_anonymized = ($a1['contact_pref'] == 'anonymize');
+      $cid = $a1['cid'];
+
       if ($a1['contact_pref'] != 'no_contact') {
         $name = $a1['name'];
         $original_email = $a1['mail'];
         $encoded_email = emailanonymizer_generate_address();
-        $show_anonymized = ($a1['contact_pref'] == 'anonymize');
-        $cid = $a1['cid'];
         $created = date("F j, Y, g:i a");
         $sql = 'INSERT INTO {emailanonymizer_email_mapping} (created, sender_name, original_email, encoded_email, ref_id, ref_type, show_anonymized) VALUES ("%d", "%s", "%s","%s", %d, "%s", %d)';
         db_query($sql, $created, $name, $original_email, $encoded_email, $cid, 'comment', $show_anonymized);
@@ -154,6 +155,11 @@ function emailanonymizer_comment(&$a1, $op) {
       }
 
       comment_save($a1);
+
+      if ($show_anonymized || $a1['contact_pref'] == 'no_contact') {
+        db_query("UPDATE {comments} SET uid = 0 WHERE cid = %s", $cid);
+      }
+
       break;
     case 'view':
       $anonymized = emailanonymizer_get_anonymized_email($a1->cid, 'comment');
